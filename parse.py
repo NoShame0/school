@@ -85,3 +85,10 @@ class GoogleSheet:
         self.sheets_info = self.service.spreadsheets()\
             .get(spreadsheetId=self.SPREADSHEET_ID, fields='sheets.properties')\
             .execute()
+
+    def get_groups_of_students(self):
+        return self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_ID,
+                                                                       range="F2:2").execute().get('values', [])[0]
+
+if __name__ == "__main__":
+    print(GoogleSheet().get_groups_of_students())
