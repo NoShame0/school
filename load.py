@@ -6,7 +6,7 @@ from parse import GoogleSheet
 from create import UserData
 
 
-def elements(session: Session, users: List[dict]) -> int:
+def elements(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
 
     names = {user_data.name for user_data in session.query(UserData)}
 
@@ -19,6 +19,24 @@ def elements(session: Session, users: List[dict]) -> int:
             raise ValueError(f'Unable to add new user_data '
                              f'because a parameter "name" does not exists.')
 
+        for k in mainKeys:
+            if k in user.keys():
+                params[k] = user[k]
+            else:
+                params[k] = None
+
+        for gr in groupList:
+            if (gr in user.keys() and user[gr] == "+"):
+                params[gr] = True
+            else:
+                params[gr] = False
+
+
+        if (params['name'] not in names):  # add user
+            session.add(UserData(**params))
+            names.add(params['name'])
+
+        """
         if 'name' in user.keys():
             params['name'] = user['name']
         else:
@@ -67,6 +85,7 @@ def elements(session: Session, users: List[dict]) -> int:
         if (params['name'] not in names):  # add user
             session.add(UserData(**params))
             names.add(params['name'])
+        
 
         else:  # update user
             old_user = session.query(UserData).filter_by(name=params['name']).first()
@@ -78,25 +97,26 @@ def elements(session: Session, users: List[dict]) -> int:
             old_user.noProfOrient = params['noProfOrient']
             old_user.etc = params['etc']
             old_user.etc2 = params['etc2']
-
+        """
     session.commit()
     return 0
 
 
-def loadData(session):    
-    googleSheet = GoogleSheet()
-    data = googleSheet.read_data()
+def loadData(session: Session, groupList: List[str], data):    
 
     listData = []
     for v in data.values():
         listData.extend(v)
 
     users = []
-    keys = ["name", "parallel", "group", "classTeacher", "tutor", "olymp", "noProfOrient", "etc", "etc2"]
+    mainKeys = ["name", "parallel", "group", "classTeacher", "tutor"]
+    keys = mainKeys
+    keys.extend(groupList)
+
     for values in listData:
         users.append(dict(zip(keys, values)))
     
-    elements(session, users)
+    elements(session, users, mainKeys, groupList)
 
 
     
