@@ -1,9 +1,6 @@
-import json
-from typing import List, Optional
+from typing import List
 from sqlalchemy.orm import Session
-from transliterate import translit
-import create
-import parse
+from bot import create
 
 
 def elements(

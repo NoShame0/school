@@ -3,8 +3,7 @@ import difflib
 import telebot
 from dadata import Dadata
 
-import create
-import data
+from bot import create, data
 import parse
 import read
 
