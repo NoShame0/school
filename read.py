@@ -1,9 +1,9 @@
 import json
 from typing import List, Optional
 from sqlalchemy.orm import Session
-
-
+from transliterate import translit
 import create
+import parse
 
 
 def elements(
@@ -11,10 +11,8 @@ def elements(
     name="",
     parallel="",
     group="",
-    classTeacher="",
+    class_teacher="",
     tutor="",
-    etc="",
-    etc2="",
 ) -> List[dict]:
 
     params = dict()
@@ -28,32 +26,29 @@ def elements(
     if group != "":
         params["group"] = group
 
-    if classTeacher != "":
-        params["classTeacher"] = classTeacher
+    if class_teacher != "":
+        params["classTeacher"] = class_teacher
 
     if tutor != "":
         params["tutor"] = tutor
-        
-    if etc != "":
-        params["etc"] = etc
 
-    if etc2 != "":
-        params["etc2"] = etc2
+    users_data = []
+    for user_data in session.query(create.UserData).filter_by(**params):
 
-    users_data = [
-        {
+        user = {
             "name": user_data.name,
             "parallel": user_data.parallel,
             "group": user_data.group,
             "classTeacher": user_data.classTeacher,
             "tutor": user_data.tutor,
-            "olymp": user_data.olymp,
-            "noProfOrient": user_data.noProfOrient,
-            "etc": user_data.etc,
-            "etc2": user_data.etc2,
         }
-        for user_data in session.query(create.UserData).filter_by(**params)
-    ]
+        for atr in create.UserData.groupList:
+            user[atr] = getattr(user_data, atr)
+
+        users_data.append(user)
 
     return users_data
 
+
+if __name__ == '__main__':
+    elements(create.create_session())

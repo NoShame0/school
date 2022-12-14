@@ -1,13 +1,16 @@
 import json
 from typing import List
+
+import sqlalchemy.exc
 from sqlalchemy.orm import Session, sessionmaker
 
+import create
+import read
 from parse import GoogleSheet
 from create import UserData
 
 
 def elements(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
-
     names = {user_data.name for user_data in session.query(UserData)}
 
     for user in users:
@@ -30,7 +33,6 @@ def elements(session: Session, users: List[dict], mainKeys: List[str], groupList
                 params[gr] = True
             else:
                 params[gr] = False
-
 
         if (params['name'] not in names):  # add user
             session.add(UserData(**params))
@@ -102,8 +104,7 @@ def elements(session: Session, users: List[dict], mainKeys: List[str], groupList
     return 0
 
 
-def loadData(session: Session, groupList: List[str], data):    
-
+def loadData(session: Session, groupList: List[str], data):
     listData = []
     for v in data.values():
         listData.extend(v)
@@ -115,8 +116,28 @@ def loadData(session: Session, groupList: List[str], data):
 
     for values in listData:
         users.append(dict(zip(keys, values)))
-    
+
     elements(session, users, mainKeys, groupList)
 
 
-    
+from transliterate import translit
+
+if __name__ == "__main__":
+    googleSheet = GoogleSheet()
+    ruGroupList = googleSheet.get_groups_of_students()
+    data = googleSheet.read_data()
+    groupList = []
+
+    # транслит + очистка строки от лишних символов
+    for gr in ruGroupList:
+        translitGr = translit(gr, language_code='ru', reversed=True)
+        clearGr = "".join(c for c in translitGr if c.isalpha())
+        groupList.append(clearGr)
+
+    try:
+        create.create()
+    except sqlalchemy.exc.ProgrammingError:
+        pass
+    print(read.elements(create.create_session()))
+    loadData(create.create_session(), groupList, data)
+
