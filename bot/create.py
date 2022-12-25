@@ -36,6 +36,29 @@ class UserData(Base):
 
     exec(newColumns)
 
+google_ss = GoogleSheet()
+content = google_ss.read_data_content()
+types = google_ss.get_types_of_content()
+
+cols = '\n    '
+for i in range(len(types)):
+
+    types[i] = ''.join(c for c in translit(types[i], language_code='ru', reversed=True) if c.isalpha())
+    if i == 0:
+        add = types[i] + ' = Column(String, primary_key = True)\n    '
+    else:
+        add = types[i] + ' = Column(String)\n    '
+
+    cols = cols + add
+
+
+for group in content.keys():
+    exec(
+        f"class {''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())}(Base):\n" +
+        f"    __tablename__ = '{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
+        cols
+    )
+
 
 def create():
     engine = create_engine("postgresql://postgres:VladMurat228@/postgres")#на место postgres:1111 свой логин и пароль
@@ -56,3 +79,5 @@ def create_session():
     return session
 
 
+if __name__ == "__main__":
+    create()

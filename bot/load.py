@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from bot import create
 import read
 from parse import GoogleSheet
-from bot.create import UserData
+from bot.create import *
 
 
-def elements(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
+def elements_students(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
+
     names = {user_data.name for user_data in session.query(UserData)}
 
     for user in users:
@@ -103,7 +104,7 @@ def elements(session: Session, users: List[dict], mainKeys: List[str], groupList
     return 0
 
 
-def loadData(session: Session, groupList: List[str], data):
+def loadDataStudents(session: Session, groupList: List[str], data):
     listData = []
     for v in data.values():
         listData.extend(v)
@@ -116,7 +117,41 @@ def loadData(session: Session, groupList: List[str], data):
     for values in listData:
         users.append(dict(zip(keys, values)))
 
-    elements(session, users, mainKeys, groupList)
+    elements_students(session, users, mainKeys, groupList)
+
+def elements_contents(session: Session, data: dict) -> int:
+
+    google = GoogleSheet()
+    types = google.get_types_of_content()
+    types_original = types.copy()
+
+    for i in range(len(types)):
+        translit_types = translit(types[i], language_code='ru', reversed=True)
+        clear = "".join(c for c in translit_types if c.isalpha())
+        types[i] = clear
+
+    for group, content in data.items():
+        class_name = "".join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
+
+        max_len = 0
+        for key, value in content.items():
+            if len(value) > max_len:
+                max_len = len(value)
+
+        for i in range(max_len):
+
+            params = dict()
+            for j in range(len(types)):
+                if i >= len(content[types_original[j]]):
+                    params[types[j]] = ''
+                else:
+                    params[types[j]] = content[types_original[j]][i]
+
+            exec(f"session.add({class_name}(**{params}))")
+
+
+    session.commit()
+    return 0
 
 
 from transliterate import translit
@@ -124,7 +159,7 @@ from transliterate import translit
 if __name__ == "__main__":
     googleSheet = GoogleSheet()
     ruGroupList = googleSheet.get_groups_of_students()
-    data = googleSheet.read_data()
+    data = googleSheet.read_data_content()
     groupList = []
 
     # транслит + очистка строки от лишних символов
@@ -134,9 +169,8 @@ if __name__ == "__main__":
         groupList.append(clearGr)
 
     try:
-        create.create()
+        create()
     except sqlalchemy.exc.ProgrammingError:
         pass
-    print(read.elements(create.create_session()))
-    loadData(create.create_session(), groupList, data)
+    elements_contents(create_session(), data)
 
