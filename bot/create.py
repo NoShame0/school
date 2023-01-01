@@ -36,9 +36,11 @@ class UserData(Base):
 
     exec(newColumns)
 
+print("Запрос...")
 google_ss = GoogleSheet()
 content = google_ss.read_data_content()
 types = google_ss.get_types_of_content()
+print("Запрос выполнен")
 
 cols = '\n    '
 for i in range(len(types)):
@@ -51,13 +53,19 @@ for i in range(len(types)):
 
     cols = cols + add
 
-
+groups = []
 for group in content.keys():
+
+    class_name = ''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
     exec(
-        f"class {''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())}(Base):\n" +
+        f"class {class_name}(Base):\n" +
         f"    __tablename__ = '{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
         cols
     )
+
+    print("Таблица " + class_name + " создана.")
+
+    groups.append(class_name)
 
 
 def create():

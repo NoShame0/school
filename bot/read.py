@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from bot import create
 
 
-def elements(
+def elements_students(
     session: Session,
     name="",
     parallel="",
@@ -48,4 +48,4 @@ def elements(
 
 
 if __name__ == '__main__':
-    elements(create.create_session())
+    elements_students(create.create_session())

@@ -1,5 +1,9 @@
 from __future__ import print_function
 
+import time
+
+import googleapiclient.errors
+
 from bot import data
 import os.path
 
@@ -18,6 +22,7 @@ def get_syms_by_num(number):
         number = (number - 1) // 26
 
     return result
+
 
 class Google:
     SPREADSHEET_STUDENTS_ID = data.SPREADSHEET_STUDENTS_ID
@@ -102,22 +107,21 @@ class GoogleSheet(Google):
 
         return content_groups
 
-
-
     def info(self, SPREADSHEET_ID):
-
         self.sheets_info = self.service.spreadsheets()\
             .get(spreadsheetId=SPREADSHEET_ID, fields='sheets.properties')\
             .execute()
 
     def get_groups_of_students(self):
-        return self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_STUDENTS_ID,
-                                                        range="F2:2").execute().get('values', [])[0]
+
+        groups = self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_STUDENTS_ID,
+                                                          range="F2:2").execute().get('values', [])[0]
+        return groups
 
     def get_types_of_content(self):
 
         result = self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_CONTENTS_ID,
-                                                        range="A2:2").execute().get('values', [])
+                                                          range="A2:2").execute().get('values', [])
         if result:
             return result[0]
         return result

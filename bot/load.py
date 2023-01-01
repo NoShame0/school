@@ -3,10 +3,11 @@ from typing import List
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
 
-from bot import create
 import read
-from parse import GoogleSheet
+from parse import GoogleSheet, Drive
 from bot.create import *
+
+from transliterate import translit
 
 
 def elements_students(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
@@ -154,14 +155,11 @@ def elements_contents(session: Session, data: dict) -> int:
     return 0
 
 
-from transliterate import translit
+if __name__ == "__main__":
 
-
-def main_load():
-
-    googleSheet = GoogleSheet()
-    ruGroupList = googleSheet.get_groups_of_students()
-    data = googleSheet.read_data_students()
+    google_sheet = GoogleSheet()
+    ruGroupList = google_sheet.get_groups_of_students()
+    data = google_sheet.read_data_students()
     groupList = []
 
     # транслит + очистка строки от лишних символов
@@ -170,10 +168,4 @@ def main_load():
         clearGr = "".join(c for c in translitGr if c.isalpha())
         groupList.append(clearGr)
 
-    try:
-        create()
-    except sqlalchemy.exc.ProgrammingError:
-        pass
-
     loadDataStudents(create_session(), groupList, data)
-

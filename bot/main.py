@@ -1,4 +1,5 @@
 import difflib
+import time
 
 import telebot
 from telebot import types
@@ -9,12 +10,16 @@ from bot import create, data, load
 import parse
 import read
 
+import database
+
 from users_bot import *
 
 bot = telebot.TeleBot(data.TOKEN_API)
 sh = parse.GoogleSheet()
 
-load.main_load()
+time.sleep(60)
+db = database.DataBase()
+print("База данных загружена")
 
 token_dadata = data.TOKEN_DADATA
 secret = data.SECRET_DADATA
@@ -23,7 +28,7 @@ secret = data.SECRET_DADATA
 def register(message):
 
     session = create.create_session()
-    all_names = [(student['name'], student['parallel'], student['group']) for student in read.elements(session)]
+    all_names = [(student['name'], student['parallel'], student['group']) for student in read.elements_students(session)]
 
     possible_name = Dadata(token_dadata, secret).clean("name", message.text)['result']
 
