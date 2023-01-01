@@ -61,7 +61,7 @@ for group in content.keys():
 
 
 def create():
-    engine = create_engine("postgresql://postgres:VladMurat228@/postgres")#на место postgres:1111 свой логин и пароль
+    engine = create_engine("postgresql://postgres:1111@/postgres")#на место postgres:1111 свой логин и пароль
     conn = engine.connect()
     conn.execute("commit")
     conn.execute("create database db_school_v21")
@@ -69,7 +69,7 @@ def create():
 
 
 def create_session():
-    engine = create_engine("postgresql://postgres:VladMurat228@localhost:5432/db_school_v21")  # сюда тоже
+    engine = create_engine("postgresql://postgres:1111@localhost:5432/db_school_v21")  # сюда тоже
     engine.connect()
     Base.metadata.create_all(engine)
 

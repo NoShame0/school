@@ -19,42 +19,43 @@ def get_syms_by_num(number):
 
     return result
 
-
-#   The class is necessary for working with the table (writing and reading information)
-class GoogleSheet:
-
-    # __init__ this is an example from the Google Sheets API documentation
+class Google:
     SPREADSHEET_STUDENTS_ID = data.SPREADSHEET_STUDENTS_ID
     SPREADSHEET_CONTENTS_ID = data.SPREADSHEET_CONTENTS_ID
-
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    service = None
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly',
+              'https://www.googleapis.com/auth/drive.metadata.readonly']
 
     def __init__(self):
-
-        creds = None
+        self.creds = None
         if os.path.exists('token.pickle'):
             with open('token.pickle', 'rb') as token:
-                creds = pickle.load(token)
+                self.creds = pickle.load(token)
 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+        if not self.creds or not self.creds.valid:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.creds.refresh(Request())
 
             else:
                 print('flow')
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', self.SCOPES)
-                creds = flow.run_local_server(port=0)
+                self.creds = flow.run_local_server(port=0)
 
             with open('token.pickle', 'wb') as token:
-                pickle.dump(creds, token)
+                pickle.dump(self.creds, token)
 
-        self.service = build('sheets', 'v4', credentials=creds)
+
+class GoogleSheet(Google):
+
+    service = None
+
+    def __init__(self):
+
+        super(GoogleSheet, self).__init__()
+
+        self.service = build('sheets', 'v4', credentials=self.creds)
 
         self.sheets_info = None
-
-        self.creds = creds
 
     def read_data_students(self):
 
@@ -102,8 +103,6 @@ class GoogleSheet:
         return content_groups
 
 
-    def _on_edit(self):
-        pass
 
     def info(self, SPREADSHEET_ID):
 
@@ -123,5 +122,20 @@ class GoogleSheet:
             return result[0]
         return result
 
+
+class Drive(Google):
+
+    service = None
+
+    def __init__(self):
+        super(Drive, self).__init__()
+        self.service = build('drive', 'v2', credentials=self.creds)
+
+    def get_modified_date(self, fileId):
+        return self.service.files().get(fileId=fileId).execute()['modifiedDate']
+
+
 if __name__ == "__main__":
-    print(GoogleSheet().get_types_of_content())
+    print(Drive().get_modified_date(Drive.SPREADSHEET_STUDENTS_ID))
+    print(GoogleSheet().read_data_content())
+

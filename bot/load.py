@@ -119,6 +119,7 @@ def loadDataStudents(session: Session, groupList: List[str], data):
 
     elements_students(session, users, mainKeys, groupList)
 
+
 def elements_contents(session: Session, data: dict) -> int:
 
     google = GoogleSheet()
@@ -149,17 +150,18 @@ def elements_contents(session: Session, data: dict) -> int:
 
             exec(f"session.add({class_name}(**{params}))")
 
-
     session.commit()
     return 0
 
 
 from transliterate import translit
 
-if __name__ == "__main__":
+
+def main_load():
+
     googleSheet = GoogleSheet()
     ruGroupList = googleSheet.get_groups_of_students()
-    data = googleSheet.read_data_content()
+    data = googleSheet.read_data_students()
     groupList = []
 
     # транслит + очистка строки от лишних символов
@@ -172,5 +174,6 @@ if __name__ == "__main__":
         create()
     except sqlalchemy.exc.ProgrammingError:
         pass
-    elements_contents(create_session(), data)
+
+    loadDataStudents(create_session(), groupList, data)
 

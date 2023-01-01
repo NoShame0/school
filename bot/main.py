@@ -1,16 +1,21 @@
 import difflib
 
 import telebot
+from telebot import types
+
 from dadata import Dadata
 
-from bot import create, data
+from bot import create, data, load
 import parse
 import read
+
+from users_bot import *
 
 bot = telebot.TeleBot(data.TOKEN_API)
 sh = parse.GoogleSheet()
 
-chats_status = {}
+load.main_load()
+
 token_dadata = data.TOKEN_DADATA
 secret = data.SECRET_DADATA
 
@@ -42,25 +47,55 @@ def register(message):
     if max < 0.5 or not possible_name:
         bot.send_message(message.chat.id, "Извините, я вас не понимаю")
     else:
-        bot.send_message(message.chat.id, "Вы " + max_name + " из " + class_group + "?")
+        markup_main = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn_yes = types.KeyboardButton("Да")
+        btn_no = types.KeyboardButton("Нет")
+
+        markup_main.add(btn_yes, btn_no)
+        bot.send_message(message.chat.id, "Вы " + max_name + " из " + class_group + "?", reply_markup=markup_main)
+        chats_info[message.chat.id]['name'] = max_name
+        chats_status[message.chat.id] = 'CONFIRM'
 
     session.close()
 
 
+def begin(message):
+    pass
+
+
+def confirm(message):
+    if message.text == "Да":
+        chats_status[message.chat.id] = "BEGIN"
+        remove = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, f"Здравствуйте, {message.from_user.first_name}!\n"
+                                          f"Вы успешно авторизованы как {chats_info[message.chat.id]['name']}.",
+                         reply_markup=remove)
+
+
 funcs = {
     "REGISTER": register,
+    "BEGIN": begin,
+    "CONFIRM": confirm,
 }
 
 
 @bot.message_handler(commands=['start', 'restart'])
 def start_message(message):
     bot.send_message(message.chat.id, "Привет, введи имя!")
+    chats_info[message.chat.id] = {
+        "start": False,
+        "name": None,
+        "register": False,
+    }
     chats_status[message.chat.id] = "REGISTER"
 
 
 @bot.message_handler(content_types=['text'])
 def text_func(message):
-    funcs["REGISTER"](message)
+    chat_status = chats_status[message.chat.id]
+    funcs[chat_status](message)
 
 
 bot.polling(none_stop=True)
+
+
