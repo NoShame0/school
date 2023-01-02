@@ -3,21 +3,14 @@ import time
 
 import telebot
 from telebot import types
-
 from dadata import Dadata
-
-from bot import create, data, load
-import parse
-import read
-
+import data
 import database
 
 from users_bot import *
 
 bot = telebot.TeleBot(data.TOKEN_API)
-sh = parse.GoogleSheet()
 
-time.sleep(60)
 db = database.DataBase()
 print("База данных загружена")
 
@@ -27,9 +20,7 @@ secret = data.SECRET_DADATA
 
 def register(message):
 
-    session = create.create_session()
-    all_names = [(student['name'], student['parallel'], student['group']) for student in read.elements_students(session)]
-
+    all_names = db.read_info_students()
     possible_name = Dadata(token_dadata, secret).clean("name", message.text)['result']
 
     max = 0
@@ -61,7 +52,6 @@ def register(message):
         chats_info[message.chat.id]['name'] = max_name
         chats_status[message.chat.id] = 'CONFIRM'
 
-    session.close()
 
 
 def begin(message):

@@ -1,4 +1,3 @@
-import create
 from load import *
 from read import *
 
