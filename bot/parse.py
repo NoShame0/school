@@ -1,7 +1,5 @@
 from __future__ import print_function
-
 import time
-
 import googleapiclient.errors
 
 from bot import data

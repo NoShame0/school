@@ -1,6 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Session
-from bot import create
+import create
 
 
 def elements_students(
@@ -45,7 +45,3 @@ def elements_students(
         users_data.append(user)
 
     return users_data
-
-
-if __name__ == '__main__':
-    elements_students(create.create_session())

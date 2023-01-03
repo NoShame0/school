@@ -1,5 +1,4 @@
 import difflib
-import time
 
 import telebot
 from telebot import types
@@ -56,7 +55,8 @@ def register(message):
 
 
 def begin(message):
-    pass
+    if time_checker.content_is_updated():
+        pass
 
 
 def confirm(message):
@@ -66,6 +66,8 @@ def confirm(message):
         bot.send_message(message.chat.id, f"Здравствуйте, {message.from_user.first_name}!\n"
                                           f"Вы успешно авторизованы как {chats_info[message.chat.id]['name']}.",
                          reply_markup=remove)
+    elif message.text == 'Нет':
+        start_message(message)
 
 
 funcs = {
@@ -77,7 +79,7 @@ funcs = {
 
 @bot.message_handler(commands=['start', 'restart'])
 def start_message(message):
-    bot.send_message(message.chat.id, "Привет, введи имя!")
+    bot.send_message(message.chat.id, "Введите ФИО для регистрации")
     chats_info[message.chat.id] = {
         "start": False,
         "name": None,
@@ -88,8 +90,12 @@ def start_message(message):
 
 @bot.message_handler(content_types=['text'])
 def text_func(message):
-    chat_status = chats_status[message.chat.id]
-    funcs[chat_status](message)
+    try:
+        chat_status = chats_status[message.chat.id]
+        funcs[chat_status](message)
+    except KeyError:
+        bot.send_message(message.chat.id, "Чат не зарегистрирован! Пройдите регистрацию")
+        start_message(message)
 
 
 bot.polling(none_stop=True)

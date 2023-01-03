@@ -26,8 +26,11 @@ class TimeChecker:
         self.last_time_update_contents = convert_date_from_google_drive(
             self.drive.get_modified_date(data.SPREADSHEET_CONTENTS_ID))
 
+        self._content_updated = False
+        self._students_updated = False
+
     def time_check(self):
-        # infinity loop for checkin user time last message
+
         while True:
             cur_time_update_students = convert_date_from_google_drive(
                 self.drive.get_modified_date(data.SPREADSHEET_STUDENTS_ID))
@@ -38,12 +41,24 @@ class TimeChecker:
             if cur_time_update_students > self.last_time_update_students:
                 self.last_time_update_students = cur_time_update_students
                 self.database.load_to_base_students()
+                self._students_updated = True
 
             if cur_time_update_contents > self.last_time_update_contents:
                 self.last_time_update_students = cur_time_update_contents
                 self.database.load_to_base_content()
+                self._content_updated = True
 
             time.sleep(60)
+
+    def content_is_updated(self):
+        result = self._content_updated
+        self._content_updated = False
+        return result
+
+    def students_is_updated(self):
+        result = self._students_updated
+        self._students_updated = False
+        return result
 
     def start(self):
 

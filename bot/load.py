@@ -3,16 +3,15 @@ from typing import List
 import sqlalchemy.exc
 from sqlalchemy.orm import Session
 
-import read
 from parse import GoogleSheet, Drive
-from bot.create import *
+import create
 
 from transliterate import translit
 
 
 def elements_students(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
 
-    names = {user_data.name for user_data in session.query(UserData)}
+    names = {user_data.name for user_data in session.query(create.UserData)}
 
     for user in users:
         params = dict()
@@ -36,7 +35,7 @@ def elements_students(session: Session, users: List[dict], mainKeys: List[str], 
                 params[gr] = False
 
         if (params['name'] not in names):  # add user
-            session.add(UserData(**params))
+            session.add(create.UserData(**params))
             names.add(params['name'])
 
         """
@@ -150,23 +149,7 @@ def elements_contents(session: Session, data: dict) -> int:
                 else:
                     params[types[j]] = content[types_original[j]][i]
 
-            exec(f"session.add({class_name}(**{params}))")
+            exec(f"session.add(create.{class_name}(**{params}))")
 
     session.commit()
     return 0
-
-
-if __name__ == "__main__":
-
-    google_sheet = GoogleSheet()
-    ruGroupList = google_sheet.get_groups_of_students()
-    data = google_sheet.read_data_students()
-    groupList = []
-
-    # транслит + очистка строки от лишних символов
-    for gr in ruGroupList:
-        translitGr = translit(gr, language_code='ru', reversed=True)
-        clearGr = "".join(c for c in translitGr if c.isalpha())
-        groupList.append(clearGr)
-
-    loadDataStudents(create_session(), groupList, data)

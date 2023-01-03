@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, BigInteger, JSON, Boolean, PickleType
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -16,7 +16,7 @@ class UserData(Base):
     googleSheet = GoogleSheet()
     ruGroupList = googleSheet.get_groups_of_students()
     groupList = []
-    #транслит + очистка строки от лишних символов
+    # транслит + очистка строки от лишних символов
     for gr in ruGroupList:
         translitGr = translit(gr, language_code='ru', reversed=True)
         clearGr = "".join(c for c in translitGr if c.isalpha())
@@ -29,7 +29,7 @@ class UserData(Base):
     classTeacher = Column(String)
     tutor = Column(String)
 
-    #динамическая генерация кода для создания n-ного количества столбцов бд
+    # динамическая генерация кода для создания n-ного количества столбцов бд
     newColumns = ""
     for gr in groupList:
         newColumns += (gr + " = Column(Boolean)\n")
@@ -60,7 +60,8 @@ for group in content.keys():
     class_name = ''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
     exec(
         f"class {class_name}(Base):\n" +
-        f"    __tablename__ = '{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
+        f"    __tablename__ = "
+        f"'{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
         cols
     )
 
@@ -70,7 +71,8 @@ for group in content.keys():
 
 
 def create():
-    engine = create_engine("postgresql://postgres:1111@/postgres")#на место postgres:1111 свой логин и пароль
+    # на место postgres:1111 свой логин и пароль
+    engine = create_engine("postgresql://postgres:1111@/postgres")
     conn = engine.connect()
     conn.execute("commit")
     conn.execute("create database db_school_v21")
@@ -86,7 +88,3 @@ def create_session():
     session = Session()
 
     return session
-
-
-if __name__ == "__main__":
-    create()
