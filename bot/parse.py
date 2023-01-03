@@ -24,6 +24,21 @@ def get_syms_by_num(number):
     return result
 
 
+def request_error_handling(func):
+    def inner(*params):
+        flag = True
+        while flag:
+            try:
+                result = func(*params)
+                flag = False
+            except googleapiclient.errors.HttpError:
+                time.sleep(60)
+
+        return result
+
+    return inner
+
+
 class Google:
     SPREADSHEET_STUDENTS_ID = data.SPREADSHEET_STUDENTS_ID
     SPREADSHEET_CONTENTS_ID = data.SPREADSHEET_CONTENTS_ID
@@ -62,6 +77,7 @@ class GoogleSheet(Google):
 
         self.sheets_info = None
 
+    @request_error_handling
     def read_data_students(self):
 
         lists_parallel = {}
@@ -83,6 +99,7 @@ class GoogleSheet(Google):
 
         return lists_parallel
 
+    @request_error_handling
     def read_data_content(self):
 
         content_groups = {}
@@ -107,17 +124,20 @@ class GoogleSheet(Google):
 
         return content_groups
 
+    @request_error_handling
     def info(self, SPREADSHEET_ID):
         self.sheets_info = self.service.spreadsheets()\
             .get(spreadsheetId=SPREADSHEET_ID, fields='sheets.properties')\
             .execute()
 
+    @request_error_handling
     def get_groups_of_students(self):
 
         groups = self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_STUDENTS_ID,
                                                           range="F2:2").execute().get('values', [])[0]
         return groups
 
+    @request_error_handling
     def get_types_of_content(self):
 
         result = self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_CONTENTS_ID,
@@ -135,6 +155,7 @@ class Drive(Google):
         super(Drive, self).__init__()
         self.service = build('drive', 'v2', credentials=self.creds)
 
+    @request_error_handling
     def get_modified_date(self, fileId):
         return self.service.files().get(fileId=fileId).execute()['modifiedDate']
 

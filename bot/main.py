@@ -6,12 +6,14 @@ from telebot import types
 from dadata import Dadata
 import data
 import database
+import check_update
 
 from users_bot import *
 
 bot = telebot.TeleBot(data.TOKEN_API)
-
 db = database.DataBase()
+time_checker = check_update.TimeChecker(db)
+
 print("База данных загружена")
 
 token_dadata = data.TOKEN_DADATA
@@ -53,7 +55,6 @@ def register(message):
         chats_status[message.chat.id] = 'CONFIRM'
 
 
-
 def begin(message):
     pass
 
@@ -92,5 +93,3 @@ def text_func(message):
 
 
 bot.polling(none_stop=True)
-
-

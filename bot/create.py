@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, BigInteger, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, BigInteger, JSON, Boolean, PickleType
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -35,6 +35,7 @@ class UserData(Base):
         newColumns += (gr + " = Column(Boolean)\n")
 
     exec(newColumns)
+
 
 print("Запрос...")
 google_ss = GoogleSheet()

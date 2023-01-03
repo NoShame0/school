@@ -1,3 +1,5 @@
+import json
+
 from load import *
 from read import *
 
@@ -40,6 +42,7 @@ class DataBase:
             exec(f"self.session.query({class_name}).delete(synchronize_session='fetch')")
 
         self.session.commit()
+
         elements_contents(self.session, self.google_sheet.read_data_content())
 
     def read_info_students(self):
@@ -47,3 +50,4 @@ class DataBase:
 
     def read_info_content(self):
         pass
+
