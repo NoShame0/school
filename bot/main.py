@@ -12,6 +12,8 @@ from users_bot import *
 bot = telebot.TeleBot(data.TOKEN_API)
 db = database.DataBase()
 time_checker = check_update.TimeChecker(db)
+time_checker.start()
+
 
 print("База данных загружена")
 

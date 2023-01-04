@@ -56,7 +56,7 @@ class Google:
             else:
                 print('flow')
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', self.SCOPES)
+                    data.PATH_CRED, self.SCOPES)
                 self.creds = flow.run_local_server(port=0)
 
             with open('token.pickle', 'wb') as token:
