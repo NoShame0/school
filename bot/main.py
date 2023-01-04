@@ -6,6 +6,7 @@ from dadata import Dadata
 import data
 import database
 import check_update
+import threading
 
 from users_bot import *
 
@@ -21,6 +22,21 @@ token_dadata = data.TOKEN_DADATA
 secret = data.SECRET_DADATA
 
 
+def mailing():
+    while True:
+        if time_checker.content_is_updated():
+            info_content = db.update_content()
+
+            for chat, info in chats_info.items():
+                if info['register'] and 'add' in info_content and info['group'] in info_content['add']:
+                    for content in info_content['add'][info['group']]:
+                        bot.send_message(chat, content)
+
+
+mailing_thread = threading.Thread(target=mailing)
+mailing_thread.start()
+
+
 def register(message):
 
     all_names = db.read_info_students()
@@ -29,6 +45,7 @@ def register(message):
     max = 0
     class_group = ''
     max_name = ''
+    group_category = []
 
     if possible_name:
         for student in all_names:
@@ -37,6 +54,7 @@ def register(message):
                     max = difflib.SequenceMatcher(None, possible_name, student[0]).ratio()
                     max_name = student[0]
                     class_group = str(student[1]) + student[2]
+                    group_category = student[3]
                 except TypeError:
                     continue
 
@@ -53,21 +71,33 @@ def register(message):
         markup_main.add(btn_yes, btn_no)
         bot.send_message(message.chat.id, "Вы " + max_name + " из " + class_group + "?", reply_markup=markup_main)
         chats_info[message.chat.id]['name'] = max_name
+        chats_info[message.chat.id]['group'] = group_category
+        print(group_category)
         chats_status[message.chat.id] = 'CONFIRM'
 
 
 def begin(message):
-    if time_checker.content_is_updated():
-        pass
+    pass
 
 
 def confirm(message):
     if message.text == "Да":
         chats_status[message.chat.id] = "BEGIN"
+        chats_info[message.chat.id]['start'] = True
+        chats_info[message.chat.id]['register'] = True
         remove = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, f"Здравствуйте, {message.from_user.first_name}!\n"
                                           f"Вы успешно авторизованы как {chats_info[message.chat.id]['name']}.",
                          reply_markup=remove)
+
+        for cur_group in chats_info[message.chat.id]['group']:
+            print(cur_group)
+            for links in db.read_info_content(group=cur_group).values():
+                print(links)
+                for link in links:
+                    print(link)
+                    bot.send_message(message.chat.id, link)
+
     elif message.text == 'Нет':
         start_message(message)
 
@@ -86,6 +116,7 @@ def start_message(message):
         "start": False,
         "name": None,
         "register": False,
+        "group": None
     }
     chats_status[message.chat.id] = "REGISTER"
 

@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import sqlalchemy.exc
@@ -29,7 +30,7 @@ def elements_students(session: Session, users: List[dict], mainKeys: List[str], 
                 params[k] = None
 
         for gr in groupList:
-            if (gr in user.keys() and user[gr] == "+"):
+            if (gr in user.keys() and user[gr] == "1"):
                 params[gr] = True
             else:
                 params[gr] = False
@@ -153,3 +154,31 @@ def elements_contents(session: Session, data: dict) -> int:
 
     session.commit()
     return 0
+
+
+def elements_content(session: Session, data: dict) -> int:
+
+    google = GoogleSheet()
+    types = google.get_types_of_content()
+    types_original = types.copy()
+
+    for i in range(len(types)):
+        translit_types = translit(types[i], language_code='ru', reversed=True)
+        clear = "".join(c for c in translit_types if c.isalpha())
+        types[i] = clear
+
+    for group, content in data.items():
+        params = {}
+        class_name = "".join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
+        params['group'] = class_name
+
+        for i in range(len(types)):
+
+            params[types[i]] = json.dumps(content[types_original[i]])
+
+        session.add(create.ContentData(**params))
+
+    session.commit()
+    return 0
+
+

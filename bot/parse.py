@@ -159,6 +159,5 @@ class Drive(Google):
 
 
 if __name__ == "__main__":
-    print(Drive().get_modified_date(Drive.SPREADSHEET_STUDENTS_ID))
     print(GoogleSheet().read_data_content())
 

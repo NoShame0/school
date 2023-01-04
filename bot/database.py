@@ -20,6 +20,35 @@ class DataBase:
         self.load_to_base_students()
         self.load_to_base_content()
         self.students = self.read_info_students()
+        self.content = self.read_info_content()
+
+    def update_content(self):
+        cur = self.content
+        new = self.read_info_content()
+
+        add = set()
+        delete = set()
+
+        for key, value in list(set(cur.items()) ^ set(cur.items())):
+            if key in new and new[key] == value:
+                if key not in cur:
+                    add.add((key, value))
+                else:
+                    new_content = list(set(value) - set(cur[key]))
+                    old_content = list(set(cur[key]) - set(value))
+                    add.add((key, new_content))
+                    delete.add((key, old_content))
+            else:
+                delete.add((key, value))
+
+        diff = {
+            'add': dict(add),
+            'delete': dict(delete),
+        }
+
+        self.content = new
+
+        return diff
 
     def load_to_base_students(self):
 
@@ -40,17 +69,17 @@ class DataBase:
 
     def load_to_base_content(self):
 
-        for class_name in create.groups:
-            exec(f"self.session.query(create.{class_name}).delete(synchronize_session='fetch')")
-
+        self.session.query(create.ContentData).delete(synchronize_session='fetch')
         self.session.commit()
 
-        elements_contents(self.session, self.google_sheet.read_data_content())
+        elements_content(self.session, self.google_sheet.read_data_content())
 
-    def read_info_students(self):
-        return [(student['name'], student['parallel'], student['group']) for student in read.elements_students(
-            self.session)]
+    def read_info_students(self, **params):
+        return [(student['name'], student['parallel'], student['group'], student['group_category']) for student in read.elements_students(
+            self.session, **params)]
 
-    def read_info_content(self):
-        pass
+    def read_info_content(self, **params):
+        return read.elements_content(self.session, **params)
+
+
 

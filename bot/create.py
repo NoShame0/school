@@ -54,20 +54,28 @@ for i in range(len(types)):
 
     cols = cols + add
 
-groups = []
-for group in content.keys():
+groups = UserData.groupList
+# groups = []
+# for group in content.keys():
+#
+#     class_name = ''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
+#     exec(
+#         f"class {class_name}(Base):\n" +
+#         f"    __tablename__ = "
+#         f"'{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
+#         cols
+#     )
+#
+#     print("Таблица " + class_name + " создана.")
+#
+#     groups.append(class_name)
 
-    class_name = ''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
-    exec(
-        f"class {class_name}(Base):\n" +
-        f"    __tablename__ = "
-        f"'{''.join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha()).lower()}_data'" +
-        cols
-    )
 
-    print("Таблица " + class_name + " создана.")
-
-    groups.append(class_name)
+class ContentData(Base):
+    __tablename__ = "content_data"
+    group = Column(String, primary_key=True)
+    for type in types:
+        exec(f'{type} = Column(String)\n')
 
 
 def create():

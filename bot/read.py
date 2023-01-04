@@ -1,6 +1,7 @@
 from typing import List
 from sqlalchemy.orm import Session
 import create
+import json
 
 
 def elements_students(
@@ -38,10 +39,39 @@ def elements_students(
             "group": user_data.group,
             "classTeacher": user_data.classTeacher,
             "tutor": user_data.tutor,
+            'group_category': []
         }
+
         for atr in create.UserData.groupList:
-            user[atr] = getattr(user_data, atr)
+            if getattr(user_data, atr):
+                user['group_category'].append(atr)
 
         users_data.append(user)
 
     return users_data
+
+
+def elements_content(
+    session: Session,
+    group="",
+) -> dict:
+
+    params = {}
+    if group != '':
+        params['group'] = group
+
+    result = {}
+    for content_data in session.query(create.ContentData).filter_by(**params):
+        for type in create.types:
+            exec(f"result['{type}'] = json.loads(content_data.{type})")
+
+    return result
+
+
+if __name__ == "__main__":
+
+    import database
+
+    db = database.DataBase()
+
+    print(elements_content(create.create_session(), group='Olimpiadnik'))
