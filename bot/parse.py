@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 import googleapiclient.errors
 
-from bot import data
+import data
 import os.path
 
 from google.auth.transport.requests import Request

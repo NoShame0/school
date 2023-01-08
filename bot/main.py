@@ -1,5 +1,7 @@
 import difflib
+import sys
 
+import keyboard
 import telebot
 from telebot import types
 from dadata import Dadata
@@ -22,8 +24,12 @@ token_dadata = data.TOKEN_DADATA
 secret = data.SECRET_DADATA
 
 
+mailing_stop = False
+
+
 def mailing():
-    while True:
+
+    while not mailing_stop:
         if time_checker.content_is_updated():
             info_content = db.update_content()
 
@@ -36,8 +42,10 @@ def mailing():
                                     for link in content:
                                         bot.send_message(chat, link)
 
+    return 0
 
-mailing_thread = threading.Thread(target=mailing)
+
+mailing_thread = threading.Thread(target=mailing, daemon=True)
 mailing_thread.start()
 
 
@@ -101,7 +109,7 @@ def confirm(message):
                         for link in links_type:
                             bot.send_message(message.chat.id, link)
 
-    elif message.text == 'Нет':
+    else:
         start_message(message)
 
 
@@ -124,6 +132,11 @@ def start_message(message):
     chats_status[message.chat.id] = "REGISTER"
 
 
+@bot.message_handler(commands=['stop'])
+def stop_bot(message):
+    bot.stop_bot()
+
+
 @bot.message_handler(content_types=['text'])
 def text_func(message):
     try:
@@ -134,4 +147,4 @@ def text_func(message):
         start_message(message)
 
 
-bot.polling(none_stop=True)
+bot.polling()

@@ -29,9 +29,11 @@ class TimeChecker:
         self._content_updated = False
         self._students_updated = False
 
+        self.end = False
+
     def time_check(self):
 
-        while True:
+        while not self.end:
             cur_time_update_students = convert_date_from_google_drive(
                 self.drive.get_modified_date(data.SPREADSHEET_STUDENTS_ID))
 
@@ -55,6 +57,7 @@ class TimeChecker:
                 self._content_updated = True
 
             time.sleep(60)
+        return 0
 
     def content_is_updated(self):
 
@@ -72,5 +75,5 @@ class TimeChecker:
 
     def start(self):
 
-        thread = threading.Thread(target=self.time_check)
+        thread = threading.Thread(target=self.time_check, daemon=True)
         thread.start()
