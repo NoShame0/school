@@ -62,16 +62,15 @@ def elements_content(
 
     result = {}
     for content_data in session.query(create.ContentData).filter_by(**params):
+        result[content_data.group] = {}
         for type in create.types:
-            exec(f"result['{type}'] = json.loads(content_data.{type})")
+            exec(f"result[content_data.group]['{type}'] = json.loads(content_data.{type})")
 
     return result
 
 
 if __name__ == "__main__":
 
-    import database
+    import create
 
-    db = database.DataBase()
-
-    print(elements_content(create.create_session(), group='Olimpiadnik'))
+    print(elements_content(create.create_session()))

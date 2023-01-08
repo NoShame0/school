@@ -135,7 +135,6 @@ def elements_contents(session: Session, data: dict) -> int:
     for group, content in data.items():
         class_name = "".join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
 
-
         max_len = 0
         for key, value in content.items():
             if len(value) > max_len:

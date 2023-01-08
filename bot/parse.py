@@ -30,7 +30,8 @@ def request_error_handling(func):
                 result = func(*params)
                 flag = False
             except googleapiclient.errors.HttpError:
-                time.sleep(60)
+                print("Повтор")
+                time.sleep(15)
 
         return result
 
@@ -111,11 +112,13 @@ class GoogleSheet(Google):
             col = 1
             for type in types:
                 range = title + '!' + get_syms_by_num(col) + '3:' + get_syms_by_num(col)
+
                 content_group[type] = self.service.spreadsheets().values().get(spreadsheetId=self.SPREADSHEET_CONTENTS_ID,
-                         range=range).execute().get('values', [])
+                         range=range, majorDimension='COLUMNS').execute().get('values', [])
 
                 if content_group[type]:
                     content_group[type] = content_group[type][0]
+
                 col += 1
 
             content_groups[title] = content_group

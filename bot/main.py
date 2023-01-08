@@ -28,9 +28,13 @@ def mailing():
             info_content = db.update_content()
 
             for chat, info in chats_info.items():
-                if info['register'] and 'add' in info_content and info['group'] in info_content['add']:
-                    for content in info_content['add'][info['group']]:
-                        bot.send_message(chat, content)
+                if info['register'] and 'add' in info_content:
+                    for group in info['group']:
+                        if group in info_content['add']:
+                            for type_content, content in info_content['add'][group].items():
+                                if content:
+                                    for link in content:
+                                        bot.send_message(chat, link)
 
 
 mailing_thread = threading.Thread(target=mailing)
@@ -40,7 +44,7 @@ mailing_thread.start()
 def register(message):
 
     all_names = db.read_info_students()
-    possible_name = Dadata(token_dadata, secret).clean("name", message.text)['result']
+    possible_name = message.text
 
     max = 0
     class_group = ''
@@ -72,7 +76,6 @@ def register(message):
         bot.send_message(message.chat.id, "Вы " + max_name + " из " + class_group + "?", reply_markup=markup_main)
         chats_info[message.chat.id]['name'] = max_name
         chats_info[message.chat.id]['group'] = group_category
-        print(group_category)
         chats_status[message.chat.id] = 'CONFIRM'
 
 
@@ -90,13 +93,13 @@ def confirm(message):
                                           f"Вы успешно авторизованы как {chats_info[message.chat.id]['name']}.",
                          reply_markup=remove)
 
+        bot.send_message(message.chat.id, "Подборка полезных ссылок:")
         for cur_group in chats_info[message.chat.id]['group']:
-            print(cur_group)
             for links in db.read_info_content(group=cur_group).values():
-                print(links)
-                for link in links:
-                    print(link)
-                    bot.send_message(message.chat.id, link)
+                for links_type in links.values():
+                    if links_type:
+                        for link in links_type:
+                            bot.send_message(message.chat.id, link)
 
     elif message.text == 'Нет':
         start_message(message)

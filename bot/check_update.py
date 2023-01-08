@@ -39,23 +39,33 @@ class TimeChecker:
                 self.drive.get_modified_date(data.SPREADSHEET_CONTENTS_ID))
 
             if cur_time_update_students > self.last_time_update_students:
+                print("Таблица со студентами изменена")
                 self.last_time_update_students = cur_time_update_students
+                print("Загрузка бд")
                 self.database.load_to_base_students()
+                print("Загрузка бд")
                 self._students_updated = True
 
             if cur_time_update_contents > self.last_time_update_contents:
-                self.last_time_update_students = cur_time_update_contents
+                print("Таблица с конетентом изменена")
+                self.last_time_update_contents = cur_time_update_contents
+                print("Загрузка бд....")
                 self.database.load_to_base_content()
+                print("Загрузка бд завершена")
                 self._content_updated = True
 
             time.sleep(60)
 
     def content_is_updated(self):
+
         result = self._content_updated
+        if result:
+            print("Изменение контента замечено")
         self._content_updated = False
         return result
 
     def students_is_updated(self):
+        print("Изменение студентов замечено")
         result = self._students_updated
         self._students_updated = False
         return result

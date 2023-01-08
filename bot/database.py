@@ -1,8 +1,11 @@
 import json
 
+import sqlalchemy
 import create
-from load import *
+import load
 import read
+from parse import GoogleSheet
+from transliterate import translit
 
 
 class DataBase:
@@ -26,24 +29,26 @@ class DataBase:
         cur = self.content
         new = self.read_info_content()
 
-        add = set()
-        delete = set()
+        print(cur == new)
 
-        for key, value in list(set(cur.items()) ^ set(cur.items())):
-            if key in new and new[key] == value:
-                if key not in cur:
-                    add.add((key, value))
+        add = {}
+
+        for group, content in new.items():
+            if group in cur:
+                if cur[group].items() == content.items():
+                    print("Таблица", group, "не изменена")
                 else:
-                    new_content = list(set(value) - set(cur[key]))
-                    old_content = list(set(cur[key]) - set(value))
-                    add.add((key, new_content))
-                    delete.add((key, old_content))
-            else:
-                delete.add((key, value))
+                    add[group] = {}
+                    for type_content, links in content.items():
+                        if type_content in cur[group]:
+                            if cur[group][type_content] == links:
+                                print("Контент", group, type_content, "не изменен")
+                            else:
+                                print("Контент", group, type_content, "изменен")
+                                add[group][type_content] = list(set(links) - set(cur[group][type_content]))
 
         diff = {
-            'add': dict(add),
-            'delete': dict(delete),
+            'add': add,
         }
 
         self.content = new
@@ -65,14 +70,14 @@ class DataBase:
             clearGr = "".join(c for c in translitGr if c.isalpha())
             groupList.append(clearGr)
 
-        loadDataStudents(self.session, groupList, data)
+        load.loadDataStudents(self.session, groupList, data)
 
     def load_to_base_content(self):
 
         self.session.query(create.ContentData).delete(synchronize_session='fetch')
         self.session.commit()
 
-        elements_content(self.session, self.google_sheet.read_data_content())
+        load.elements_content(self.session, self.google_sheet.read_data_content())
 
     def read_info_students(self, **params):
         return [(student['name'], student['parallel'], student['group'], student['group_category']) for student in read.elements_students(
@@ -80,6 +85,3 @@ class DataBase:
 
     def read_info_content(self, **params):
         return read.elements_content(self.session, **params)
-
-
-
