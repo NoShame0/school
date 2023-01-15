@@ -71,6 +71,18 @@ groups = UserData.groupList
 #     groups.append(class_name)
 
 
+class ChatData(Base):
+
+    __tablename__ = 'chat_data'
+    chat_id = Column(Integer, primary_key=True)
+    start = Column(Boolean)
+    name = Column(String)
+    register = Column(Boolean)
+    group = Column(String)
+    status = Column(String)
+    class_group = Column(String)
+
+
 class ContentData(Base):
     __tablename__ = "content_data"
     group = Column(String, primary_key=True)
@@ -80,7 +92,7 @@ class ContentData(Base):
 
 def create():
     # на место postgres:1111 свой логин и пароль
-    engine = create_engine("postgresql://postgres:1111@/postgres")
+    engine = create_engine("postgresql://postgres:VladMurat228@/postgres")
     conn = engine.connect()
     conn.execute("commit")
     conn.execute("create database db_school_v21")
@@ -88,7 +100,8 @@ def create():
 
 
 def create_session():
-    engine = create_engine("postgresql://postgres:1111@localhost:5432/db_school_v21")  # сюда тоже
+
+    engine = create_engine("postgresql://postgres:VladMurat228@localhost:5432/db_school_v21")  # сюда тоже
     engine.connect()
     Base.metadata.create_all(engine)
 

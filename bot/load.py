@@ -13,31 +13,32 @@ from transliterate import translit
 def elements_students(session: Session, users: List[dict], mainKeys: List[str], groupList: List[str]) -> int:
 
     names = {user_data.name for user_data in session.query(create.UserData)}
-
     for user in users:
         params = dict()
 
-        if 'name' in user.keys():
+        if 'name' in user.keys() and user['name'] not in names:
             params['name'] = user['name']
-        else:
-            raise ValueError(f'Unable to add new user_data '
-                             f'because a parameter "name" does not exists.')
 
         for k in mainKeys:
-            if k in user.keys():
+            if k in user.keys() and k != 'name':
                 params[k] = user[k]
-            else:
+            elif k != "name":
                 params[k] = None
 
         for gr in groupList:
-            if (gr in user.keys() and user[gr] == "1"):
+            if (gr in user.keys() and user[gr]):
                 params[gr] = True
             else:
                 params[gr] = False
 
-        if (params['name'] not in names):  # add user
+        if 'name' in params.keys():  # add user
+
             session.add(create.UserData(**params))
             names.add(params['name'])
+        else:
+            query = session.query(create.UserData).filter_by(name=user['name'])
+            if list(query):
+                query.update(params, synchronize_session='fetch')
 
         """
         if 'name' in user.keys():
@@ -169,15 +170,33 @@ def elements_content(session: Session, data: dict) -> int:
     for group, content in data.items():
         params = {}
         class_name = "".join(c for c in translit(group, language_code='ru', reversed=True) if c.isalpha())
-        params['group'] = class_name
+        query = session.query(create.ContentData).filter_by(group=class_name)
 
-        for i in range(len(types)):
+        if list(query):
 
-            params[types[i]] = json.dumps(content[types_original[i]])
+            for i in range(len(types)):
+                new = content[types_original[i]]
+                cur = getattr(query.first(), types[i])
+                cur = json.loads(cur)
+                add = list(set(new) - set(cur))
+                cur = cur + add
+                params[types[i]] = json.dumps(cur)
 
-        session.add(create.ContentData(**params))
+            query.update(params, synchronize_session='fetch')
+
+        else:
+            params['group'] = class_name
+
+            for i in range(len(types)):
+                params[types[i]] = json.dumps(content[types_original[i]])
+
+            session.add(create.ContentData(**params))
 
     session.commit()
     return 0
 
+
+if __name__ == "__main__":
+
+    loadDataStudents(create.create_session(), create.groups, GoogleSheet().read_data_students())
 

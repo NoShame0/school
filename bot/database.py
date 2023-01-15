@@ -12,12 +12,13 @@ class DataBase:
 
     def __init__(self):
 
+        self.session = create.create_session()
+
         try:
             create.create()
         except sqlalchemy.exc.ProgrammingError:
-            pass
+            self.clear_base()
 
-        self.session = create.create_session()
         self.google_sheet = GoogleSheet()
 
         self.load_to_base_students()
@@ -28,8 +29,6 @@ class DataBase:
     def update_content(self):
         cur = self.content
         new = self.read_info_content()
-
-        print(cur == new)
 
         add = {}
 
@@ -57,9 +56,6 @@ class DataBase:
 
     def load_to_base_students(self):
 
-        self.session.query(create.UserData).delete(synchronize_session='fetch')
-        self.session.commit()
-
         ruGroupList = self.google_sheet.get_groups_of_students()
         data = self.google_sheet.read_data_students()
         groupList = []
@@ -74,14 +70,57 @@ class DataBase:
 
     def load_to_base_content(self):
 
-        self.session.query(create.ContentData).delete(synchronize_session='fetch')
-        self.session.commit()
-
         load.elements_content(self.session, self.google_sheet.read_data_content())
 
     def read_info_students(self, **params):
-        return [(student['name'], student['parallel'], student['group'], student['group_category']) for student in read.elements_students(
-            self.session, **params)]
+        return [(student['name'], student['parallel'], student['group'], student['group_category']) for student in
+                read.elements_students(
+                    self.session, **params)]
 
     def read_info_content(self, **params):
         return read.elements_content(self.session, **params)
+
+    def chats_update(self, params: dict):
+
+        params_copy = dict(params)
+
+        for chat_id in params_copy.keys():
+
+            params_copy[chat_id]['group'] = json.dumps(params_copy[chat_id]['group'])
+
+            query = self.session.query(create.ChatData).filter_by(chat_id=chat_id)
+            if list(query):
+                query.update(params_copy[chat_id], synchronize_session='fetch')
+            else:
+                params_copy[chat_id]['chat_id'] = chat_id
+
+                self.session.add(create.ChatData(**(params_copy[chat_id])))
+
+        self.session.commit()
+
+    def read_chats_info(self, **params):
+
+        query = self.session.query(create.ChatData).filter_by(**params)
+
+        result = {}
+        for chat_data in query:
+            result[chat_data.chat_id] = {
+                "start": chat_data.start,
+                "name": chat_data.name,
+                "register": chat_data.register,
+                "group": json.loads(chat_data.group),
+                "status": chat_data.status,
+                "class_group": chat_data.class_group,
+            }
+
+        return result
+
+    def clear_base(self):
+        self.session.query(create.ContentData).filter_by().delete()
+        self.session.commit()
+
+
+if __name__ == "__main__":
+    db = DataBase()
+
+    db.clear_base()
