@@ -69,8 +69,15 @@ def elements_content(
     return result
 
 
-if __name__ == "__main__":
+def check_password(session: Session, name: str, password: str) -> bool:
+    admin = session.query(create.AdminData).filter_by(name=name).first()
+    return admin.check_password(password)
 
-    import create
+
+if __name__ == "__main__":
+    import create, load
 
     print(elements_content(create.create_session()))
+    #s = create.create_session()
+    #load.elements_admin(session=s, name="ya", password="admin")
+    #print(check_password(session=s, name="ya", password="p"))

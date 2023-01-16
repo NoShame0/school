@@ -196,6 +196,17 @@ def elements_content(session: Session, data: dict) -> int:
     return 0
 
 
+
+
+def elements_admin(session: Session, name: str, password: str) -> int:
+    admin = create.AdminData(name=name)
+    admin.set_password(password)
+
+    session.add(admin)
+    session.commit()
+    return 0
+
+
 if __name__ == "__main__":
 
     loadDataStudents(create.create_session(), create.groups, GoogleSheet().read_data_students())
