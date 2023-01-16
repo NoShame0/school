@@ -90,6 +90,19 @@ class ContentData(Base):
         exec(f'{type} = Column(String)\n')
 
 
+class AdminData(Base):
+    __tablename__ = 'admin_data'
+    #id = Column(Integer, primary_key=True)
+    name = Column(String, primary_key=True)
+    password_hash = Column(String)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+
 def create():
     # на место postgres:1111 свой логин и пароль
     engine = create_engine("postgresql://postgres:VladMurat228@/postgres")
